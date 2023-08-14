@@ -44,7 +44,7 @@ def add_phone(conn, number_id, number):
         return cur.fetchall()
 
 
-def change_client(conn, client_id, first_name=None, last_name=None, email=None, number=None):
+def change_client(conn, client_id, first_name='%', last_name='%', email='%', number='%'):
     with conn.cursor() as cur:
         cur.execute("""
         UPDATE Client SET first_name=%s, last_name=%s, email=%s 
@@ -97,13 +97,24 @@ def delete_client(conn, client_id):
         """, (client_id))
         return cur.fetchone()
 
-def find_client(conn, first_name=None, last_name=None, email=None, number=None):
+def find_client(conn, first_name='%', last_name='%', email='%', number='%'):
     with conn.cursor() as cur:
-        cur.execute("""
-        SELECT Client.first_name, Client.last_name, Client.email, Phone.number FROM Client
-        LEFT JOIN Phone ON Client.client_id = Phone.number_id
-        WHERE Client.first_name=%s OR Client.last_name=%s OR Client.email=%s OR Phone.number=%s;
-        """, (first_name, last_name, email, number))
+        if number is None:
+            cur.execute("""
+            SELECT Client.client_id, Client.first_name, Client.last_name,
+            Client.email, Phone.number FROM Client
+        	LEFT JOIN Phone ON Client.client_id = Phone.number_id
+        	WHERE Client.first_name LIKE %s AND Client.last_name LIKE %s
+        	AND Client.email LIKE %s
+        	""", (first_name, last_name, email))
+        else:
+            cur.execute("""
+        	SELECT Client.client_id, Client.first_name, Client.last_name,
+        	Client.email, Phone.number FROM Client
+        	LEFT JOIN Phone ON Client.client_id = Phone.number_id
+        	WHERE Client.first_name LIKE %s AND Client.last_name LIKE %s
+        	AND Client.email LIKE %s AND Phone.number LIKE %s
+        	""", (first_name, last_name, email, number))
         return cur.fetchall()
 
 
